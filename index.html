@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Code 工具</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --bg-card: #ffffff;
+      --accent: #5c9bbf;
+      --accent-hover: #4a8aad;
+      --text: #2c2c2c;
+      --text-muted: #6b6b6b;
+      --border: #e5e3e0;
+      --border-dashed: #d4d2cf;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Source Sans 3', -apple-system, sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 0.25rem;
+      color: var(--text);
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      font-size: 0.95rem;
+      font-family: inherit;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab:hover {
+      color: var(--text);
+      border-color: var(--accent);
+    }
+
+    .tab.active {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: rgba(92, 155, 191, 0.06);
+    }
+
+    .panel {
+      display: none;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .input-group {
+      margin-bottom: 1.25rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    input[type="url"],
+    input[type="number"] {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      font-size: 0.95rem;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      transition: border-color 0.2s;
+    }
+
+    input[type="url"]:focus,
+    input[type="number"]:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .size-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      margin-top: 1rem;
+    }
+
+    .size-row input {
+      width: 100px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 0.9rem 1.25rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+      font-family: inherit;
+      color: white;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background: var(--accent-hover);
+    }
+
+    .drop-zone {
+      border: 2px dashed var(--border-dashed);
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      background: var(--bg);
+      margin-bottom: 1rem;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .drop-zone.dragover {
+      border-color: var(--accent);
+      background: rgba(92, 155, 191, 0.04);
+    }
+
+    .drop-zone-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+      font-family: inherit;
+      color: white;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-bottom: 0.75rem;
+    }
+
+    .drop-zone-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    .drop-zone-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .drop-zone-hint {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .qr-section {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .qr-section.hidden {
+      display: none;
+    }
+
+    #qrcode img {
+      display: block;
+      width: 256px;
+      height: 256px;
+      margin: 0 auto 1rem;
+      border-radius: 8px;
+    }
+
+    .download-area {
+      margin-top: 1rem;
+    }
+
+    .download-area label {
+      margin-bottom: 0.5rem;
+    }
+
+    .download-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-top: 0.75rem;
+    }
+
+    .download-btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      font-family: inherit;
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .download-btn:hover {
+      background: rgba(92, 155, 191, 0.08);
+    }
+
+    .decode-result {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: var(--bg);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      word-break: break-all;
+      font-size: 0.9rem;
+    }
+
+    .decode-result.hidden {
+      display: none;
+    }
+
+    .decode-result-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .decode-result-value {
+      color: var(--text);
+    }
+
+    .decode-result-value a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .decode-result-value a:hover {
+      text-decoration: underline;
+    }
+
+    .error-msg {
+      color: #c45c5c;
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+    }
+
+    .error-msg.hidden {
+      display: none;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>QR Code 工具</h1>
+    <p class="subtitle">編碼與解碼，一體完成</p>
+
+    <div class="tabs">
+      <button class="tab active" data-panel="encode">生成 QR Code</button>
+      <button class="tab" data-panel="decode">上傳解碼</button>
+    </div>
+
+    <div id="encode-panel" class="panel active">
+      <div class="input-group">
+        <label for="url-input">網址</label>
+        <input type="url" id="url-input" placeholder="https://example.com" autocomplete="url">
+        <span class="error-msg hidden" id="encode-error">請輸入有效的網址</span>
+      </div>
+      <button class="btn" id="generate-btn">生成 QR Code</button>
+
+      <div class="qr-section hidden" id="qr-section">
+        <div id="qrcode"></div>
+        <div class="download-area">
+          <label>下載尺寸（PNG）</label>
+          <div class="size-row">
+            <input type="number" id="png-size" min="64" max="2048" value="256" placeholder="256">
+            <span style="color: var(--text-muted); font-size: 0.9rem;">px</span>
+          </div>
+          <div class="download-btns">
+            <button class="download-btn" id="download-png-btn">下載 PNG</button>
+            <button class="download-btn" id="download-svg-btn">下載 SVG</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="decode-panel" class="panel">
+      <div class="drop-zone" id="drop-zone">
+        <input type="file" id="file-input" accept="image/*">
+        <button type="button" class="drop-zone-btn" id="upload-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="4" height="4" rx="1"/>
+            <rect x="20" y="14" width="1" height="1"/>
+          </svg>
+          上傳解碼
+        </button>
+        <p class="drop-zone-hint">上傳二維碼圖片 或 將圖片拖入方框內</p>
+      </div>
+      <div class="decode-result hidden" id="decode-result">
+        <div class="decode-result-label">解碼結果</div>
+        <div class="decode-result-value" id="decode-value"></div>
+      </div>
+      <span class="error-msg hidden" id="decode-error">無法識別 QR Code</span>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/gh/cozmo/jsQR@master/dist/jsQR.min.js"></script>
+  <script type="module">
+    import QRCode from 'https://esm.sh/qrcode@1.5.4';
+
+    const urlInput = document.getElementById('url-input');
+    const generateBtn = document.getElementById('generate-btn');
+    const qrSection = document.getElementById('qr-section');
+    const qrcodeContainer = document.getElementById('qrcode');
+    const pngSizeInput = document.getElementById('png-size');
+    const downloadPngBtn = document.getElementById('download-png-btn');
+    const downloadSvgBtn = document.getElementById('download-svg-btn');
+    const encodeError = document.getElementById('encode-error');
+    const tabs = document.querySelectorAll('.tab');
+    const panels = document.querySelectorAll('.panel');
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const uploadBtn = document.getElementById('upload-btn');
+    const decodeResult = document.getElementById('decode-result');
+    const decodeValue = document.getElementById('decode-value');
+    const decodeError = document.getElementById('decode-error');
+
+    let currentDataUrl = null;
+
+    const qrOptions = {
+      margin: 1,
+      color: { dark: '#000000', light: '#ffffff' },
+      errorCorrectionLevel: 'H'
+    };
+
+    function isValidUrl(string) {
+      try {
+        const url = new URL(string);
+        return url.protocol === 'http:' || url.protocol === 'https:';
+      } catch {
+        return false;
+      }
+    }
+
+    function generateQRCode() {
+      const url = urlInput.value.trim();
+      encodeError.classList.add('hidden');
+
+      if (!url) {
+        encodeError.textContent = '請輸入網址';
+        encodeError.classList.remove('hidden');
+        return;
+      }
+
+      let finalUrl = url;
+      if (!isValidUrl(url)) {
+        const withProtocol = url.startsWith('http') ? url : 'https://' + url;
+        if (!isValidUrl(withProtocol)) {
+          encodeError.textContent = '請輸入有效的網址（例如：https://example.com）';
+          encodeError.classList.remove('hidden');
+          return;
+        }
+        urlInput.value = withProtocol;
+        finalUrl = withProtocol;
+      }
+
+      qrcodeContainer.innerHTML = '';
+      currentDataUrl = null;
+
+      QRCode.toDataURL(finalUrl, { ...qrOptions, width: 256 }, (err, dataUrl) => {
+        if (err) {
+          encodeError.textContent = '生成失敗，請重試';
+          encodeError.classList.remove('hidden');
+          return;
+        }
+        currentDataUrl = dataUrl;
+        const img = document.createElement('img');
+        img.src = dataUrl;
+        img.alt = 'QR Code';
+        img.width = 256;
+        img.height = 256;
+        qrcodeContainer.appendChild(img);
+        qrSection.classList.remove('hidden');
+      });
+    }
+
+    function downloadPNG() {
+      const url = urlInput.value.trim();
+      if (!url) return;
+      const size = Math.min(2048, Math.max(64, parseInt(pngSizeInput.value, 10) || 256));
+      QRCode.toDataURL(url, { ...qrOptions, width: size }, (err, dataUrl) => {
+        if (err) return;
+        const link = document.createElement('a');
+        link.download = `qrcode-${size}px.png`;
+        link.href = dataUrl;
+        link.click();
+      });
+    }
+
+    function downloadSVG() {
+      const url = urlInput.value.trim();
+      if (!url) return;
+      QRCode.toString(url, { ...qrOptions, type: 'svg' }, (err, svgString) => {
+        if (err) return;
+        const blob = new Blob([svgString], { type: 'image/svg+xml' });
+        const dataUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = 'qrcode.svg';
+        link.href = dataUrl;
+        link.click();
+        URL.revokeObjectURL(dataUrl);
+      });
+    }
+
+    function decodeImageFile(file) {
+      if (!file || !file.type.startsWith('image/')) return;
+      decodeError.classList.add('hidden');
+      decodeResult.classList.add('hidden');
+
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
+        if (code) {
+          const data = code.data;
+          decodeValue.textContent = '';
+          if (/^https?:\/\//i.test(data) && !/^javascript:/i.test(data)) {
+            const a = document.createElement('a');
+            a.href = data;
+            a.textContent = data;
+            a.target = '_blank';
+            a.rel = 'noopener';
+            decodeValue.appendChild(a);
+          } else {
+            decodeValue.textContent = data;
+          }
+          decodeResult.classList.remove('hidden');
+        } else {
+          decodeError.textContent = '無法識別 QR Code，請確保圖片清晰';
+          decodeError.classList.remove('hidden');
+        }
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        decodeError.textContent = '圖片載入失敗';
+        decodeError.classList.remove('hidden');
+      };
+      img.src = objectUrl;
+    }
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        panels.forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.panel + '-panel').classList.add('active');
+      });
+    });
+
+    generateBtn.addEventListener('click', generateQRCode);
+    urlInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') generateQRCode();
+    });
+    downloadPngBtn.addEventListener('click', downloadPNG);
+    downloadSvgBtn.addEventListener('click', downloadSVG);
+
+    uploadBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (file) decodeImageFile(file);
+      e.target.value = '';
+    });
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('dragover');
+    });
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      const file = e.dataTransfer?.files?.[0];
+      if (file) decodeImageFile(file);
+    });
+  </script>
+</body>
+</html>
